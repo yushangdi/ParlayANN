@@ -39,7 +39,7 @@ template<typename T>
 void ANN(parlay::sequence<Tvec_point<T>*> &v, int k, int maxDeg,
 	 int beamSize, int beamSizeQ, double alpha, double dummy,
 	 parlay::sequence<Tvec_point<T>*> &q,
-	 parlay::sequence<ivec_point> groundTruth, char* res_file, bool graph_built, Distance* D) {
+	 parlay::sequence<ivec_point> &groundTruth, char* res_file, bool graph_built, Distance* D) {
   parlay::internal::timer t("ANN",report_stats);
   unsigned d = (v[0]->coordinates).size();
   using findex = knn_index<T>;
@@ -51,7 +51,7 @@ void ANN(parlay::sequence<Tvec_point<T>*> &v, int k, int maxDeg,
   } else{
     parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
 					    return static_cast<int>(i);});
-    I.build_index(v, inserts);
+    I.build_index(v, std::move(inserts));
     idx_time = t.next_time();
   }
 
@@ -69,7 +69,7 @@ void ANN(parlay::sequence<Tvec_point<T>*> &v, int k, int maxDeg,
 
 
 template<typename T>
-void ANN(parlay::sequence<Tvec_point<T>*> v, int maxDeg, int beamSize, double alpha, double dummy, bool graph_built, Distance* D) {
+void ANN(parlay::sequence<Tvec_point<T>*> &v, int maxDeg, int beamSize, double alpha, double dummy, bool graph_built, Distance* D) {
   parlay::internal::timer t("ANN",report_stats);
   {
     unsigned d = (v[0]->coordinates).size();
@@ -79,9 +79,10 @@ void ANN(parlay::sequence<Tvec_point<T>*> v, int maxDeg, int beamSize, double al
     else{
       parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
 					    return static_cast<int>(i);});
-      I.build_index(v, inserts);
+      I.build_index(v, std::move(inserts));
       t.next("Built index");
     }
+
     if(report_stats){
       auto [avg_deg, max_deg] = graph_stats(v);
       std::cout << "Index built with average degree " << avg_deg << " and max degree " << max_deg << std::endl;

@@ -25,6 +25,7 @@
 #include "parlay/primitives.h"
 #include "parlay/random.h"
 #include "../utils/indexTools.h"
+#include "../utils/NSGDist.h"
 #include <random>
 #include <set>
 #include <math.h>
@@ -235,7 +236,7 @@ struct knn_index{
 					for(int j : new_edges) candidates.push_back(j);
 					parlay::sequence<int> new_neighbors(maxDeg, -1);
 					v[i]->new_nbh = parlay::make_slice(new_neighbors.begin(), new_neighbors.end());
-					robustPrune(v[i], candidates, v, r2_alpha, false);
+					robustPrune(v[i], std::move(candidates), v, r2_alpha, false);
 					synchronize(v[i]);
 				}
 				
@@ -250,8 +251,6 @@ struct knn_index{
 		delete_set.clear();
 
 	}
-
-
 
 	void batch_insert(parlay::sequence<int> &inserts, parlay::sequence<Tvec_point<T>*> &v, bool random_order = false, double alpha = 1.2, double base = 2,
 		double max_fraction = .02, bool print=true){
@@ -281,7 +280,7 @@ struct knn_index{
 				count = std::min(static_cast<size_t>(pow(base, inc+1)), m)-1;
 			} else{
 				floor = count;
-				ceiling = std::min(count + static_cast<size_t>(max_batch_size), m)-1;
+				ceiling = std::min(count + static_cast<size_t>(max_batch_size), m);
 				count += static_cast<size_t>(max_batch_size);
 			}
 			if(print){
@@ -299,7 +298,7 @@ struct knn_index{
 				v[index]->new_nbh = parlay::make_slice(new_out.begin()+maxDeg*(i-floor), new_out.begin()+maxDeg*(i+1-floor));
 				parlay::sequence<pid> visited = (beam_search(v[index], v, medoid, beamSize, d, D)).first.second;
 				if(report_stats) v[index]->visited = visited.size();
-				robustPrune(v[index], visited, v, alpha);
+				robustPrune(v[index], std::move(visited), v, alpha);
 			});
 			//make each edge bidirectional by first adding each new edge
 			//(i,j) to a sequence, then semisorting the sequence by key values
@@ -323,7 +322,7 @@ struct knn_index{
 				} else{
 					parlay::sequence<int> new_out_2(maxDeg, -1);
 					v[index]->new_nbh=parlay::make_slice(new_out_2.begin(), new_out_2.begin()+maxDeg);
-					robustPrune(v[index], candidates, v, r2_alpha);  
+					robustPrune(v[index], std::move(candidates), v, r2_alpha);  
 					synchronize(v[index]);
 				}
 			});
