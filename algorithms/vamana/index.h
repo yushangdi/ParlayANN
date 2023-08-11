@@ -188,6 +188,15 @@ struct knn_index {
     batch_insert(inserts, v, true, r2_alpha, 2, .02);
   }
 
+  void build_index_multiple_starts(parlay::sequence<Tvec_point<T>*> &v, parlay::sequence<int> inserts, int threshold = 100){
+    clear(v);
+    std::cout << "Building graph..." << std::endl;
+    find_approx_medoid(v);
+    threshold = std::min(threshold, beamSize - 1);
+    std::cout << "Starting points num: " << threshold << std::endl;
+    batch_insert_multiple_starts(inserts, v, true, threshold, r2_alpha, 2, .02);
+  }
+
   void lazy_delete(parlay::sequence<int> deletes, parlay::sequence<Tvec_point<T>*> &v){
     for(int p : deletes){
       if(p < 0 || p > (int) v.size() ){
@@ -315,6 +324,123 @@ struct knn_index {
         v[index]->new_nbh = parlay::make_slice(new_out.begin()+maxDeg*(i-floor),
                                                new_out.begin()+maxDeg*(i+1-floor));
         parlay::sequence<pid> visited = (beam_search(v[index], v, medoid, beamSize, d, D)).first.second;
+        if (report_stats) v[index]->visited = visited.size();
+        robustPrune(v[index], visited, v, alpha); });
+      t_beam.stop();
+      //make each edge bidirectional by first adding each new edge
+      //(i,j) to a sequence, then semisorting the sequence by key values
+      t_bidirect.start();
+      auto to_flatten = parlay::tabulate(ceiling-floor, [&] (size_t i){
+                          int index = shuffled_inserts[i+floor];
+                          auto edges = parlay::tabulate(size_of(v[index]->new_nbh), [&] (size_t j){
+                            return std::make_pair((v[index]->new_nbh)[j], index); });
+                          return edges; });
+
+      parlay::parallel_for(floor, ceiling, [&] (size_t i) {
+         synchronize(v[shuffled_inserts[i]]);} );
+      auto grouped_by = parlay::group_by_key(parlay::flatten(to_flatten));
+      t_bidirect.stop();
+
+      t_prune.start();
+      //finally, add the bidirectional edges; if they do not make
+      //the vertex exceed the degree bound, just add them to out_nbhs;
+      //otherwise, use robustPrune on the vertex with user-specified alpha
+      parlay::parallel_for(0, grouped_by.size(), [&] (size_t j){
+        auto& [index, candidates] = grouped_by[j];
+        int newsize = candidates.size() + size_of(v[index]->out_nbh);
+        if (newsize <= maxDeg) {
+          add_nbhs(candidates, v[index]);
+        } else{
+          parlay::sequence<int> new_out_2(maxDeg, -1);
+          v[index]->new_nbh=parlay::make_slice(new_out_2.begin(), new_out_2.begin()+maxDeg);
+          robustPrune(v[index], std::move(candidates), v, r2_alpha);  
+          synchronize(v[index]);
+        } });
+      t_prune.stop();
+      inc += 1;
+    }
+    t_beam.total();
+    t_bidirect.total();
+    t_prune.total();
+  }
+
+  void batch_insert_multiple_starts(parlay::sequence<int> &inserts,
+                    parlay::sequence<Tvec_point<T>*> &v,
+                    bool random_order = false, int threshold = 100, double alpha = 1.2, double base = 2,
+                    double max_fraction = .02, bool print=true) {
+    for(int p : inserts){
+      if(p < 0 || p > (int) v.size() || (v[p]->out_nbh[0] != -1 && v[p]->id != medoid->id)){
+        std::cout << "ERROR: invalid or already inserted point "
+                  << p << " given to batch_insert" << std::endl;
+        abort();
+      }
+    }
+    size_t n = v.size();
+    size_t m = inserts.size();
+    size_t inc = 0;
+    size_t count = 0;
+    float frac=0.0;
+    float progress_inc=.1;
+    size_t max_batch_size = std::min(static_cast<size_t>(max_fraction*static_cast<float>(n)),
+                                     1000000ul);
+    parlay::sequence<int> rperm;
+    if(random_order) rperm = parlay::random_permutation<int>(static_cast<int>(m));
+    else rperm = parlay::tabulate(m, [&] (int i) {return i;});
+    auto shuffled_inserts = parlay::tabulate(m, [&] (size_t i) {return inserts[rperm[i]];});
+    parlay::sequence<Tvec_point<T>*> start_points;
+    start_points.push_back(medoid);
+    for (int i = 0; i < threshold; ++i){
+      start_points.push_back(v[shuffled_inserts[i]]);
+    }
+    // bool flag = false;
+    // for (auto v : start_points){
+    //   if(v->id < 272){
+    //     flag = true;
+    //   }
+    // }
+    // if(!flag){
+    //   std::cout << "==== no cluster 1 point sampled\n";
+    // }
+    parlay::internal::timer t_beam("beam search time");
+    parlay::internal::timer t_bidirect("bidirect time");
+    parlay::internal::timer t_prune("prune time");
+    t_beam.stop();
+    t_bidirect.stop();
+    t_prune.stop();
+    while(count < m){
+      size_t floor;
+      size_t ceiling;
+      if(pow(base,inc) <= max_batch_size){
+        floor = static_cast<size_t>(pow(base, inc))-1;
+        ceiling = std::min(static_cast<size_t>(pow(base, inc+1)), m)-1;
+        count = std::min(static_cast<size_t>(pow(base, inc+1)), m)-1;
+      } else{
+        floor = count;
+        ceiling = std::min(count + static_cast<size_t>(max_batch_size), m);
+        count += static_cast<size_t>(max_batch_size);
+      }
+      if(print){
+        auto ind = frac*n;
+        if(floor <= ind && ceiling > ind){
+          frac += progress_inc;
+          std::cout << "Index build " << 100*frac << "% complete" << std::endl;
+        }
+      }
+      parlay::sequence<int> new_out = parlay::sequence<int>(maxDeg*(ceiling-floor), -1);
+      //search for each node starting from the medoid, then call
+      //robustPrune with the visited list as its candidate set
+      t_beam.start();
+      bool random_start = floor > threshold;
+      parlay::parallel_for(floor, ceiling, [&] (size_t i){
+        size_t index = shuffled_inserts[i];
+        v[index]->new_nbh = parlay::make_slice(new_out.begin()+maxDeg*(i-floor),
+                                               new_out.begin()+maxDeg*(i+1-floor));
+        parlay::sequence<pid> visited;
+        if(random_start){
+          visited = (beam_search(v[index], v, start_points, beamSize, d, D)).first.second;
+        } else {
+          visited = (beam_search(v[index], v, medoid, beamSize, d, D)).first.second;
+        }
         if (report_stats) v[index]->visited = visited.size();
         robustPrune(v[index], visited, v, alpha); });
       t_beam.stop();
