@@ -51,7 +51,7 @@ void ANN(parlay::sequence<Tvec_point<T>*> &v, int k, int maxDeg,
   } else{
     parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
 					    return static_cast<int>(i);});
-    I.build_index_multiple_starts(v, std::move(inserts));
+    I.build_index(v, std::move(inserts));
     idx_time = t.next_time();
   }
 
@@ -79,7 +79,7 @@ void ANN(parlay::sequence<Tvec_point<T>*> &v, int maxDeg, int beamSize, double a
     else{
       parlay::sequence<int> inserts = parlay::tabulate(v.size(), [&] (size_t i){
 					    return static_cast<int>(i);});
-      I.build_index_multiple_starts(v, std::move(inserts));
+      I.build_index(v, std::move(inserts));
       t.next("Built index");
     }
 
