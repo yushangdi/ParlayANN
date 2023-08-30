@@ -26,6 +26,7 @@
 #include "parlay/primitives.h"
 #include "parlay/random.h"
 #include "indexTools.h"
+#include "NSGDist.h"
 #include <random>
 #include <set>
 #include <math.h>

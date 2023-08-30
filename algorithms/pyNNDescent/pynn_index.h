@@ -30,6 +30,7 @@
 #include <queue>
 #include <math.h>
 #include "../utils/clusterPynn.h"
+#include "../utils/NSGDist.h"
 
 
 extern bool report_stats;
