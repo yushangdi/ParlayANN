@@ -341,9 +341,9 @@ namespace efanna2e{
 class Distance{
 public:
   virtual std::string id(){return "generic";}
-  virtual float distance(uint8_t *p, uint8_t *q, unsigned d){return 0;}
-  virtual float distance(int8_t *p, int8_t *q, unsigned d){return 0;}
-  virtual float distance(float *p, float *q, unsigned d){return 0;}
+  virtual float distance(uint8_t *p, uint8_t *q, unsigned d) const {return 0;}
+  virtual float distance(int8_t *p, int8_t *q, unsigned d) const {return 0;}
+  virtual float distance(float *p, float *q, unsigned d) const {return 0;}
   template <typename T>
   void prefetch(T* p, unsigned d) {
      int l = (d * sizeof(T))/64;
@@ -388,7 +388,7 @@ struct Euclidian_Distance : public Distance{
 
   std::string id(){return "euclidian";}
 
-  float distance(uint8_t *p, uint8_t *q, unsigned d){
+  float distance(uint8_t *p, uint8_t *q, unsigned d) const {
     int result = 0;
     for(int i=0; i<d; i++){
       result += ((int32_t)((int16_t) q[i] - (int16_t) p[i])) *
@@ -397,7 +397,7 @@ struct Euclidian_Distance : public Distance{
     return (float) result;
   }
 
-  float distance(int8_t *p, int8_t *q, unsigned d){
+  float distance(int8_t *p, int8_t *q, unsigned d) const {
     int result = 0;
     for(int i=0; i<d; i++){
       result += ((int32_t)((int16_t) q[i] - (int16_t) p[i])) *
@@ -406,7 +406,7 @@ struct Euclidian_Distance : public Distance{
     return (float) result;
   }
 
-  float distance(float *p, float *q, unsigned d){
+  float distance(float *p, float *q, unsigned d) const {
       efanna2e::DistanceL2 distfunc;
       return distfunc.compare(p, q, d);
   }
