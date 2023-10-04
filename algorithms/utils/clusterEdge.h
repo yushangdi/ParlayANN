@@ -33,7 +33,7 @@
 #include <functional>
 #include <queue>
 
-std::pair<size_t, size_t> select_two_random(parlay::sequence<size_t>& active_indices,
+inline std::pair<size_t, size_t> select_two_random(parlay::sequence<size_t>& active_indices,
 	parlay::random& rnd) {
 	size_t first_index = rnd.ith_rand(0) % active_indices.size(); 
 	size_t second_index_unshifted = rnd.ith_rand(1) % (active_indices.size()-1);

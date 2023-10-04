@@ -32,7 +32,7 @@
 
 //special size function
 template<typename T>
-int size_of(parlay::slice<T*, T*> nbh){
+inline int size_of(parlay::slice<T*, T*> nbh){
 	int size = 0;
 	int i=0;
 	while(i<nbh.size() && nbh[i] != -1) {size++; i++;}
@@ -41,7 +41,7 @@ int size_of(parlay::slice<T*, T*> nbh){
 
 //adding more neighbors
 template<typename T>
-void add_nbh(int nbh, Tvec_point<T> *p){
+inline void add_nbh(int nbh, Tvec_point<T> *p){
 	if(size_of(p->out_nbh) >= p->out_nbh.size()){
 		std::cout << "error: tried to exceed degree bound " << p->out_nbh.size() << std::endl;
 		abort();
@@ -50,7 +50,7 @@ void add_nbh(int nbh, Tvec_point<T> *p){
 }
 
 template<typename T>
-void add_nbhs(parlay::sequence<int> nbhs, Tvec_point<T> *p){
+inline void add_nbhs(parlay::sequence<int> nbhs, Tvec_point<T> *p){
   int k = size_of(p->out_nbh);
   if(k + nbhs.size() > p->out_nbh.size()){
     std::cout << "error: tried to exceed degree bound " << p->out_nbh.size() << std::endl;
@@ -61,7 +61,7 @@ void add_nbhs(parlay::sequence<int> nbhs, Tvec_point<T> *p){
 }
 
 template<typename T>
-void add_out_nbh(parlay::sequence<int> nbh, Tvec_point<T> *p){
+inline void add_out_nbh(parlay::sequence<int> nbh, Tvec_point<T> *p){
   if (nbh.size() > p->out_nbh.size()) {
     std::cout << "oversize" << std::endl;
     abort();
@@ -75,7 +75,7 @@ void add_out_nbh(parlay::sequence<int> nbh, Tvec_point<T> *p){
 }
 
 template<typename T>
-void add_new_nbh(parlay::sequence<int> nbh, Tvec_point<T> *p){
+inline void add_new_nbh(parlay::sequence<int> nbh, Tvec_point<T> *p){
   if (nbh.size() > p->new_nbh.size()) {
     std::cout << "oversize" << std::endl;
     abort();
@@ -89,7 +89,7 @@ void add_new_nbh(parlay::sequence<int> nbh, Tvec_point<T> *p){
 }
 
 template<typename T>
-void synchronize(Tvec_point<T> *p){
+inline void synchronize(Tvec_point<T> *p){
   //  std::vector<int> container = std::vector<int>();
   for(int j=0; j<p->new_nbh.size(); j++) //{
     p->out_nbh[j] = p->new_nbh[j];
@@ -105,7 +105,7 @@ void synchronize(Tvec_point<T> *p){
 
 //synchronization function
 template<typename T>
-void synchronize(parlay::sequence<Tvec_point<T>*> &v){
+inline void synchronize(parlay::sequence<Tvec_point<T>*> &v){
 	size_t n = v.size();
 	parlay::parallel_for(0, n, [&] (size_t i){
 		synchronize(v[i]);
@@ -113,12 +113,12 @@ void synchronize(parlay::sequence<Tvec_point<T>*> &v){
 }
 
 template<typename T>
-void clear(Tvec_point<T>* p){
+inline void clear(Tvec_point<T>* p){
 	for(int j=0; j<p->out_nbh.size(); j++) p->out_nbh[j] = -1;
 } 
 
 template<typename T>
-void clear(parlay::sequence<Tvec_point<T>*> &v){
+inline void clear(parlay::sequence<Tvec_point<T>*> &v){
 	size_t n = v.size();
 	parlay::parallel_for(0, n, [&] (size_t i){
 		for(int j=0; j<v[i]->out_nbh.size(); j++) v[i]->out_nbh[j] = -1;

@@ -180,7 +180,7 @@ struct lsh_result{
 };
 
 template<typename res>
-auto parse_result(parlay::sequence<res> results, parlay::sequence<float> buckets){
+inline auto parse_result(parlay::sequence<res> results, parlay::sequence<float> buckets){
   parlay::sequence<float> ret_buckets;
   parlay::sequence<res> retval;
   for(int i=0; i<buckets.size(); i++){
