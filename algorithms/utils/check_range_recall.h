@@ -30,7 +30,7 @@
 #include "csvfile.h"
 
 template<typename T>
-range_result checkRecall(
+inline range_result checkRecall(
         parlay::sequence<Tvec_point<T>*> &v,
         parlay::sequence<Tvec_point<T>*> &q,
         parlay::sequence<ivec_point> groundTruth,
@@ -97,7 +97,7 @@ range_result checkRecall(
   return R;
 }
 
-void write_to_csv(std::string csv_filename, parlay::sequence<float> buckets, 
+inline void write_to_csv(std::string csv_filename, parlay::sequence<float> buckets, 
   parlay::sequence<range_result> results, Graph G){
   csvfile csv(csv_filename);
   csv << "GRAPH" << "Parameters" << "Size" << "Build time" << "Avg degree" << "Max degree" << endrow;
@@ -117,7 +117,7 @@ void write_to_csv(std::string csv_filename, parlay::sequence<float> buckets,
 }
 
 template<typename T>
-void search_and_parse(Graph G, parlay::sequence<Tvec_point<T>*> &v, parlay::sequence<Tvec_point<T>*> &q, 
+inline void search_and_parse(Graph G, parlay::sequence<Tvec_point<T>*> &v, parlay::sequence<Tvec_point<T>*> &q, 
     parlay::sequence<ivec_point> groundTruth, double rad, char* res_file, bool random=true, int start_point=0){
     unsigned d = v[0]->coordinates.size();
 

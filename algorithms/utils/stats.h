@@ -29,7 +29,7 @@
 #include <queue>
 
 template<typename T>
-std::pair<double, int> graph_stats(parlay::sequence<Tvec_point<T>*> &v){
+inline std::pair<double, int> graph_stats(parlay::sequence<Tvec_point<T>*> &v){
 	auto od = parlay::delayed_seq<size_t>(v.size(), [&] (size_t i) {return size_of(v[i]->out_nbh);});
   	size_t j = parlay::max_element(od) - od.begin();
   	int maxDegree = od[j];
@@ -39,7 +39,7 @@ std::pair<double, int> graph_stats(parlay::sequence<Tvec_point<T>*> &v){
 }
 
 template<typename T>
-auto query_stats(parlay::sequence<Tvec_point<T>*> &q){
+inline auto query_stats(parlay::sequence<Tvec_point<T>*> &q){
 	parlay::sequence<size_t> vs = visited_stats(q);
 	parlay::sequence<size_t> ds = distance_stats(q);
 	auto result = {ds, vs};
@@ -47,7 +47,7 @@ auto query_stats(parlay::sequence<Tvec_point<T>*> &q){
 }
 
 template<typename T>
-auto range_query_stats(parlay::sequence<Tvec_point<T>*> &q){
+inline auto range_query_stats(parlay::sequence<Tvec_point<T>*> &q){
 	auto pred = [&] (Tvec_point<T>* p) {return (p->ngh.size()==0);};
 	auto pred1 = [&] (Tvec_point<T>* p) {return !pred(p);};
 	auto zero_queries = parlay::filter(q, pred);
@@ -63,7 +63,7 @@ auto range_query_stats(parlay::sequence<Tvec_point<T>*> &q){
 }
 
 template<typename T> 
-parlay::sequence<size_t> visited_stats(parlay::sequence<Tvec_point<T>*> &q){
+inline parlay::sequence<size_t> visited_stats(parlay::sequence<Tvec_point<T>*> &q){
 	auto visited_stats = parlay::tabulate(q.size(), [&] (size_t i) {return q[i]->visited;});
 	parlay::sort_inplace(visited_stats);
 	size_t avg_visited = (int) parlay::reduce(visited_stats)/((double) q.size());
@@ -74,7 +74,7 @@ parlay::sequence<size_t> visited_stats(parlay::sequence<Tvec_point<T>*> &q){
 }
 
 template<typename T> 
-parlay::sequence<size_t> distance_stats(parlay::sequence<Tvec_point<T>*> &q){
+inline parlay::sequence<size_t> distance_stats(parlay::sequence<Tvec_point<T>*> &q){
 	auto dist_stats = parlay::tabulate(q.size(), [&] (size_t i) {return q[i]->dist_calls;});
 	parlay::sort_inplace(dist_stats);
 	size_t avg_dist = (size_t) parlay::reduce(dist_stats)/((double) q.size());
@@ -85,7 +85,7 @@ parlay::sequence<size_t> distance_stats(parlay::sequence<Tvec_point<T>*> &q){
 }
 
 template<typename T> 
-parlay::sequence<size_t> rounds_stats(parlay::sequence<Tvec_point<T>*> &q){
+inline parlay::sequence<size_t> rounds_stats(parlay::sequence<Tvec_point<T>*> &q){
 	auto exp_stats = parlay::tabulate(q.size(), [&] (size_t i) {return q[i]->rounds;});
 	parlay::sort_inplace(exp_stats);
 	size_t avg_exps = (size_t) parlay::reduce(exp_stats)/((double) q.size());
@@ -95,7 +95,7 @@ parlay::sequence<size_t> rounds_stats(parlay::sequence<Tvec_point<T>*> &q){
 	return result;
 }
 
-void range_gt_stats(parlay::sequence<ivec_point> groundTruth){
+inline void range_gt_stats(parlay::sequence<ivec_point> groundTruth){
   auto sizes = parlay::tabulate(groundTruth.size(), [&] (size_t i) {return groundTruth[i].coordinates.size();});
   parlay::sort_inplace(sizes);
   size_t first_nonzero_index = 0;
@@ -111,7 +111,7 @@ void range_gt_stats(parlay::sequence<ivec_point> groundTruth){
 }
 
 template<typename T> 
-int connected_components(parlay::sequence<Tvec_point<T>*> &v){
+inline int connected_components(parlay::sequence<Tvec_point<T>*> &v){
 	parlay::sequence<bool> visited(v.size(), false);
 	int cc=0;
 	for(int i=0; i<v.size(); i++){
@@ -124,7 +124,7 @@ int connected_components(parlay::sequence<Tvec_point<T>*> &v){
 }
 
 template<typename T>
-void BFS(int start, parlay::sequence<Tvec_point<T>*> &v, parlay::sequence<bool> &visited){
+inline void BFS(int start, parlay::sequence<Tvec_point<T>*> &v, parlay::sequence<bool> &visited){
 	std::queue<int> frontier;
 	frontier.push(start);
 	while(frontier.size() != 0){

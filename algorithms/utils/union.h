@@ -29,7 +29,7 @@ using pid = std::pair<int, float>;
 using nbh = std::pair<pid, bool>;
 
 // takes in two sorted sequences and returns a sorted union
-std::pair<parlay::sequence<pid>, bool> seq_union_bounded(parlay::sequence<pid> &P,
+inline std::pair<parlay::sequence<pid>, bool> seq_union_bounded(parlay::sequence<pid> &P,
                                 parlay::sequence<pid>& Q, 
                                 int K) {
   auto less = [&](pid a, pid b) { return a.second < b.second; };
@@ -92,7 +92,7 @@ std::pair<parlay::sequence<pid>, bool> seq_union_bounded(parlay::sequence<pid> &
 
 // takes in two sorted sequences and returns a sorted union
 template <typename Seq>
-parlay::sequence<pid> seq_union(Seq& P,
+inline parlay::sequence<pid> seq_union(Seq& P,
                                 parlay::sequence<pid>& Q) {
   auto less = [&](pid a, pid b) { return a.second < b.second; };
   pid* first1 = P.begin();
@@ -137,7 +137,7 @@ parlay::sequence<pid> seq_union(Seq& P,
   return result;
 }
 
-parlay::sequence<pid> seq_union_pointers(pid* first1, pid* last1, pid* first2, pid* last2) {
+inline parlay::sequence<pid> seq_union_pointers(pid* first1, pid* last1, pid* first2, pid* last2) {
   auto less = [&](pid a, pid b) { return a.second < b.second; };
   parlay::sequence<pid> result = parlay::sequence<pid>();
   while (true) {

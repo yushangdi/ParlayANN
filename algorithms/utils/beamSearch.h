@@ -43,7 +43,7 @@ using distance = float;
 using id_dist = std::pair<vertex_id, distance>;
 
 template <typename T>
-std::pair<std::pair<parlay::sequence<id_dist>, parlay::sequence<id_dist>>, int>
+inline std::pair<std::pair<parlay::sequence<id_dist>, parlay::sequence<id_dist>>, int>
 beam_search(Tvec_point<T>* p, parlay::sequence<Tvec_point<T>*>& v,
 	    Tvec_point<T>* starting_point, int beamSize,
 	    unsigned d, Distance* D, int k=0, float cut=1.14, int limit=-1) {
@@ -55,7 +55,7 @@ beam_search(Tvec_point<T>* p, parlay::sequence<Tvec_point<T>*>& v,
 
 // main beam search
 template <typename T>
-std::pair<std::pair<parlay::sequence<id_dist>, parlay::sequence<id_dist>>, size_t>
+inline std::pair<std::pair<parlay::sequence<id_dist>, parlay::sequence<id_dist>>, size_t>
 beam_search(Tvec_point<T>* p, parlay::sequence<Tvec_point<T>*>& v,
 	      parlay::sequence<Tvec_point<T>*> starting_points, int beamSize,
 	      unsigned dims, Distance* D, int k=0, float cut=1.14, int max_visit=-1) {
@@ -193,7 +193,7 @@ beam_search(Tvec_point<T>* p, parlay::sequence<Tvec_point<T>*>& v,
 // has same functionality as above but written differently (taken from HNSW)
 // not quite as fast and does not prune based on cut.
 template <typename T>
-std::pair<std::pair<parlay::sequence<id_dist>, parlay::sequence<id_dist>>, size_t>
+inline std::pair<std::pair<parlay::sequence<id_dist>, parlay::sequence<id_dist>>, size_t>
 beam_search_(Tvec_point<T>* p, parlay::sequence<Tvec_point<T>*>& v,
 	      parlay::sequence<Tvec_point<T>*> starting_points, int beamSize,
 	      unsigned dims, Distance* D, int k=0, float cut=1.14, int max_visit=-1) {
@@ -275,7 +275,7 @@ beam_search_(Tvec_point<T>* p, parlay::sequence<Tvec_point<T>*>& v,
   
 // searches every element in q starting from a randomly selected point
 template <typename T>
-void beamSearchRandom(parlay::sequence<Tvec_point<T>*>& q,
+inline void beamSearchRandom(parlay::sequence<Tvec_point<T>*>& q,
                       parlay::sequence<Tvec_point<T>*>& v, int beamSizeQ, int k,
                       unsigned d, Distance* D, double cut = 1.14, int max_visit=-1) {
   if ((k + 1) > beamSizeQ) {
@@ -312,7 +312,7 @@ void beamSearchRandom(parlay::sequence<Tvec_point<T>*>& q,
 }
 
 template <typename T>
-void searchAll(parlay::sequence<Tvec_point<T>*>& q,
+inline void searchAll(parlay::sequence<Tvec_point<T>*>& q,
 	       parlay::sequence<Tvec_point<T>*>& v, int beamSizeQ, int k,
 	       unsigned d, Tvec_point<T>* starting_point, Distance* D, float cut, int max_visit) {
     parlay::sequence<Tvec_point<T>*> start_points;
@@ -321,7 +321,7 @@ void searchAll(parlay::sequence<Tvec_point<T>*>& q,
 }
 
 template <typename T>
-void searchAll(parlay::sequence<Tvec_point<T>*>& q,
+inline void searchAll(parlay::sequence<Tvec_point<T>*>& q,
 	       parlay::sequence<Tvec_point<T>*>& v, int beamSizeQ, int k,
 	       unsigned d, parlay::sequence<Tvec_point<T>*> starting_points,
 	       Distance* D, float cut, int max_visit) {
@@ -346,7 +346,7 @@ void searchAll(parlay::sequence<Tvec_point<T>*>& q,
 }
 
 template<typename T>
-void rangeSearchAll(parlay::sequence<Tvec_point<T>*> q, parlay::sequence<Tvec_point<T>*>& v, 
+inline void rangeSearchAll(parlay::sequence<Tvec_point<T>*> q, parlay::sequence<Tvec_point<T>*>& v, 
 		    int beamSize, unsigned d, Tvec_point<T>* start_point,
 		    double r, int k, double cut, double slack){
     parlay::parallel_for(0, q.size(), [&] (size_t i){
@@ -358,7 +358,7 @@ void rangeSearchAll(parlay::sequence<Tvec_point<T>*> q, parlay::sequence<Tvec_po
 }
 
 template<typename T>
-void rangeSearchRandom(parlay::sequence<Tvec_point<T>*> q, parlay::sequence<Tvec_point<T>*>& v, 
+inline void rangeSearchRandom(parlay::sequence<Tvec_point<T>*> q, parlay::sequence<Tvec_point<T>*>& v, 
 		       int beamSize, unsigned d, double r, int k,
 		       double cut = 1.14, double slack = 1.0){
     size_t n = v.size();
@@ -373,7 +373,7 @@ void rangeSearchRandom(parlay::sequence<Tvec_point<T>*> q, parlay::sequence<Tvec
 }
 
 template<typename T>   
-std::set<int> range_search(Tvec_point<T>* q, parlay::sequence<Tvec_point<T>*>& v, 
+inline std::set<int> range_search(Tvec_point<T>* q, parlay::sequence<Tvec_point<T>*>& v, 
 			   int beamSize, unsigned d, Tvec_point<T>* start_point,
 			   double r, Distance* D, int k, float cut, double slack){
   

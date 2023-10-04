@@ -43,7 +43,7 @@
 // *************************************************************
 
 // returns a pointer and a length
-std::pair<char*, size_t> mmapStringFromFile(const char* filename) {
+inline std::pair<char*, size_t> mmapStringFromFile(const char* filename) {
   struct stat sb;
   int fd = open(filename, O_RDONLY);
   if (fd == -1) {
@@ -77,7 +77,7 @@ std::pair<char*, size_t> mmapStringFromFile(const char* filename) {
 // *************************************************************
 
 template<typename T>
-void add_null_graph(parlay::sequence<Tvec_point<T>> &points, int maxDeg){
+inline void add_null_graph(parlay::sequence<Tvec_point<T>> &points, int maxDeg){
     parlay::sequence<int> &out_nbh = *new parlay::sequence<int>(maxDeg*points.size());
     parlay::parallel_for(0, maxDeg*points.size(), [&] (size_t i){out_nbh[i] = -1; });
     parlay::parallel_for(0, points.size(), [&] (size_t i){
@@ -86,7 +86,7 @@ void add_null_graph(parlay::sequence<Tvec_point<T>> &points, int maxDeg){
 }
 
 template<typename T>
-int add_saved_graph(parlay::sequence<Tvec_point<T>> &points, const char* gFile){
+inline int add_saved_graph(parlay::sequence<Tvec_point<T>> &points, const char* gFile){
     auto [graphptr, graphlength] = mmapStringFromFile(gFile);
     int maxDeg = *((int*)(graphptr+4));
     int num_points = *((int*)graphptr);
@@ -107,7 +107,7 @@ int add_saved_graph(parlay::sequence<Tvec_point<T>> &points, const char* gFile){
 //then the IDs in the vector
 //assumes user correctly matches data file and graph file
 template<typename T>
-void write_graph(parlay::sequence<Tvec_point<T>*> &v, char* outFile, int maxDeg){
+inline void write_graph(parlay::sequence<Tvec_point<T>*> &v, char* outFile, int maxDeg){
   int n = static_cast<int>(v.size());
   std::cout << "Writing graph with " << n << " points and max degree " << maxDeg << std::endl;
   parlay::sequence<int> preamble = {n, maxDeg};
@@ -124,7 +124,7 @@ void write_graph(parlay::sequence<Tvec_point<T>*> &v, char* outFile, int maxDeg)
 //  BINARY TOOLS: uint8, int8, float32, int32
 // *************************************************************
 
-auto parse_uint8bin(const char* filename, const char* gFile, int maxDeg){
+inline auto parse_uint8bin(const char* filename, const char* gFile, int maxDeg){
   //auto [fileptr, length] = mmapStringFromFile(filename);
   uint8_t* hold;
   long num_vectors, d;
@@ -156,7 +156,7 @@ auto parse_uint8bin(const char* filename, const char* gFile, int maxDeg){
     return std::make_pair(maxDeg, std::move(points));
 }
 
-auto parse_int8bin(const char* filename, const char* gFile, int maxDeg){
+inline auto parse_int8bin(const char* filename, const char* gFile, int maxDeg){
     auto [fileptr, length] = mmapStringFromFile(filename);
 
     int num_vectors = *((int*) fileptr);
@@ -181,7 +181,7 @@ auto parse_int8bin(const char* filename, const char* gFile, int maxDeg){
     return std::make_pair(maxDeg, std::move(points));
 }
 
-auto parse_fbin(const char* filename, const char* gFile, int maxDeg){
+inline auto parse_fbin(const char* filename, const char* gFile, int maxDeg){
     auto [fileptr, length] = mmapStringFromFile(filename);
 
     int num_vectors = *((int*) fileptr);
@@ -206,7 +206,7 @@ auto parse_fbin(const char* filename, const char* gFile, int maxDeg){
     return std::make_pair(maxDeg, std::move(points));
 }
 
-auto parse_ibin(const char* filename){
+inline auto parse_ibin(const char* filename){
     auto [fileptr, length] = mmapStringFromFile(filename);
 
     int num_vectors = *((int*) fileptr);
@@ -233,7 +233,7 @@ auto parse_ibin(const char* filename){
 //  XVECS TOOLS: uint8, float32, int32
 // *************************************************************
 
-auto parse_fvecs(const char* filename, const char* gFile, int maxDeg) {
+inline auto parse_fvecs(const char* filename, const char* gFile, int maxDeg) {
   auto [fileptr, length] = mmapStringFromFile(filename);
 
   // Each vector is 4 + 4*d bytes.
@@ -265,7 +265,7 @@ auto parse_fvecs(const char* filename, const char* gFile, int maxDeg) {
   return std::make_pair(maxDeg, std::move(points));
 }
 
-auto parse_bvecs(const char* filename, const char* gFile, int maxDeg) {
+inline auto parse_bvecs(const char* filename, const char* gFile, int maxDeg) {
 
   auto [fileptr, length] = mmapStringFromFile(filename);
   // Each vector is 4 + d bytes.
@@ -295,7 +295,7 @@ auto parse_bvecs(const char* filename, const char* gFile, int maxDeg) {
   return std::make_pair(maxDeg, std::move(points));
 }
 
-auto parse_ivecs(const char* filename) {
+inline auto parse_ivecs(const char* filename) {
   auto [fileptr, length] = mmapStringFromFile(filename);
 
   // Each vector is 4 + 4*d bytes.
@@ -325,7 +325,7 @@ auto parse_ivecs(const char* filename) {
 //  RANGERES TOOLS: int32
 // *************************************************************
 
-auto parse_rangeres(const char* filename){
+inline auto parse_rangeres(const char* filename){
     auto [fileptr, length] = mmapStringFromFile(filename);
     int num_points = *((int*) fileptr);
     int num_matches = *((int*) (fileptr+4));
