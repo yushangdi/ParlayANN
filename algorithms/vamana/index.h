@@ -108,6 +108,10 @@ struct knn_index {
     }
 
     auto new_neighbors_seq = parlay::to_sequence(new_nbhs);
+    auto less_neighbor = [&](indexType j, indexType k) {
+      return Points[p].distance(Points[j]) < Points[p].distance(Points[k]);
+    };
+    parlay::sort_inplace(new_neighbors_seq, less_neighbor);
     return new_neighbors_seq;
   }
 
@@ -143,10 +147,10 @@ struct knn_index {
 
     if(BP.two_pass) batch_insert(inserts, G, Points, BuildStats, 1.0, true, 2, .02);
     batch_insert(inserts, G, Points, BuildStats, BP.alpha, true, 2, .02);
-    parlay::parallel_for (0, G.size(), [&] (long i) {
-      auto less = [&] (indexType j, indexType k) {
-		    return Points[i].distance(Points[j]) < Points[i].distance(Points[k]);};
-      G[i].sort(less);});
+    // parlay::parallel_for (0, G.size(), [&] (long i) {
+    //   auto less = [&] (indexType j, indexType k) {
+		//     return Points[i].distance(Points[j]) < Points[i].distance(Points[k]);};
+    //   G[i].sort(less);});
   }
 
   void lazy_delete(parlay::sequence<indexType> deletes, GraphI &G) {
@@ -241,9 +245,10 @@ struct knn_index {
     float frac = 0.0;
     float progress_inc = .1;
     size_t max_batch_size = std::min(
-        static_cast<size_t>(max_fraction * static_cast<float>(n)), 1000000ul);
+        static_cast<size_t>(max_fraction * static_cast<float>(m)), 1000000ul);
+
     //fix bug where max batch size could be set to zero 
-    if(max_batch_size == 0) max_batch_size = n;
+    if(max_batch_size == 0) max_batch_size = m;
     parlay::sequence<int> rperm;
     if (random_order)
       rperm = parlay::random_permutation<int>(static_cast<int>(m));
@@ -269,6 +274,7 @@ struct knn_index {
         ceiling = std::min(count + static_cast<size_t>(max_batch_size), m);
         count += static_cast<size_t>(max_batch_size);
       }
+
       parlay::sequence<parlay::sequence<indexType>> new_out_(ceiling-floor);
       // search for each node starting from the start_point, then call
       // robustPrune with the visited list as its candidate set
@@ -295,6 +301,10 @@ struct knn_index {
 
       parlay::parallel_for(floor, ceiling, [&](size_t i) {
         G[shuffled_inserts[i]].update_neighbors(new_out_[i-floor]);
+        auto less_neighbor = [&](indexType j, indexType k) {
+          return Points[shuffled_inserts[i]].distance(Points[j]) < Points[shuffled_inserts[i]].distance(Points[k]);
+        };
+        G[shuffled_inserts[i]].sort(less_neighbor);
       });
       auto grouped_by = parlay::group_by_key(parlay::flatten(to_flatten));
       t_bidirect.stop();
@@ -308,6 +318,10 @@ struct knn_index {
         if (newsize <= BP.R) {
 	  add_neighbors_without_repeats(G[index], candidates);
 	  G[index].update_neighbors(candidates);
+    auto less_neighbor = [&](indexType j, indexType k) {
+      return Points[index].distance(Points[j]) < Points[index].distance(Points[k]);
+    };
+    G[index].sort(less_neighbor);
         } else {
           auto new_out_2_ = robustPrune(index, std::move(candidates), G, Points, alpha);
 	  G[index].update_neighbors(new_out_2_);    
