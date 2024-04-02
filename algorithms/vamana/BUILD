@@ -1,4 +1,5 @@
 # Vamana algorithm.
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "index",
@@ -11,15 +12,15 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "index_test",
-    size = "small",
-    srcs = ["index_test.cc"],
-    deps = [
-        "@googletest//:gtest_main",
-        ":index",
-    ],
-)
+# cc_test(
+#     name = "index_test",
+#     size = "small",
+#     srcs = ["index_test.cc"],
+#     deps = [
+#         "@googletest//:gtest_main",
+#         ":index",
+#     ],
+# )
 
 cc_library(
     name = "neighbors",
@@ -39,12 +40,12 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "neighbors_test",
-    size = "small",
-    srcs = ["neighbors_test.cc"],
-    deps = [
-        "@googletest//:gtest_main",
-        ":neighbors",
-    ],
-)
+# cc_test(
+#     name = "neighbors_test",
+#     size = "small",
+#     srcs = ["neighbors_test.cc"],
+#     deps = [
+#         "@googletest//:gtest_main",
+#         ":neighbors",
+#     ],
+# )

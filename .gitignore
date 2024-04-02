@@ -1,0 +1,6 @@
+MODULE.bazel
+MODULE.bazel.lock
+bazel-ParlayANN
+bazel-bin
+bazel-out
+bazel-testlogs

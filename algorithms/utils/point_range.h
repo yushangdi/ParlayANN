@@ -28,10 +28,10 @@
 #include "parlay/parallel.h"
 #include "parlay/primitives.h"
 #include "parlay/internal/file_map.h"
-#include "../bench/parse_command_line.h"
+// #include "../bench/parse_command_line.h"
 // #include "NSGDist.h"
 
-#include "../bench/parse_command_line.h"
+// #include "../bench/parse_command_line.h"
 #include "types.h"
 // #include "common/time_loop.h"
 
@@ -53,8 +53,8 @@ long dim_round_up(long dim, long tp_size){
 template<typename T, class Point>
 struct PointRange{
 
-  long dimension(){return dims;}
-  long aligned_dimension(){return aligned_dims;}
+  long dimension() const {return dims;}
+  long aligned_dimension() const {return aligned_dims;}
 
   PointRange() : values(std::shared_ptr<T[]>(nullptr, std::free)) {n=0;}
 
@@ -96,13 +96,19 @@ struct PointRange{
       }
   }
 
-  size_t size() { return n; }
+  PointRange(const size_t num_points, const unsigned int dims,
+             const unsigned int aligned_dims, T* values)
+      : n(num_points), dims(dims), aligned_dims(aligned_dims), values(values) {}
+
+  size_t size() const { return n; }
 
   unsigned int get_dims() const { return dims; }
   
-  Point operator [] (long i) {
+  Point operator [] (long i) const {
     return Point(values.get()+i*aligned_dims, dims, aligned_dims, i);
   }
+
+  T* get_values() const { return values; }
 
 private:
   std::shared_ptr<T[]> values;
